@@ -1,4 +1,5 @@
-#define SEG_BASE (*(const unsigned int *)0xfffc)
+#include <string.h>
+#include <sys16.h>
 
 void puts(const char *s)
 {
@@ -9,6 +10,6 @@ void puts(const char *s)
 		     : "=a" (rv)
 		     : "a" (4),	/* __NR_write */
 		       "b" (1),
-		       "c" ((unsigned int)s + SEG_BASE),
+		       "c" (_KPTR(s)),
 		       "d" (strlen(s)));
 }

@@ -15,6 +15,8 @@
 #include <asm/unistd.h>
 #include <sys/mman.h>
 
+#include "include16/sys16.h"
+
 static unsigned char toybox[65536] __attribute__((aligned(4096)));
 
 #define LOAD_ADDR	0x1000
@@ -71,8 +73,7 @@ static void jump16(uint32_t offset)
 	target.offset = offset;
 	target.segment = 7;
 
-	asm volatile("ljmpl *%0" : : "m" (target),
-		     "a" (LOAD_ADDR), "d" (offset));
+	asm volatile("ljmpl *%0" : : "m" (target), "a" (LOAD_ADDR));
 }
 
 static void run(const char *file)
@@ -81,6 +82,7 @@ static void run(const char *file)
 	const void *trampoline;
 	unsigned char *entrypoint;
 	uint32_t offset;
+	struct system_struct *SYS;
 
 	setup_ldt();
 
@@ -91,14 +93,14 @@ static void run(const char *file)
 		"1:\n"
 		" movw $15,%%cx\n"
 		" movw %%cx,%%ss\n"
-		" movl %%edx,%%esp\n"
+		" movl %2,%%esp\n"
 		" movw %%cx,%%ds\n"
 		" movw %%cx,%%es\n"
 		" movw %%cx,%%fs\n"
 		" movw %%cx,%%gs\n"
 		" calll *%%eax\n"
 		" movzbl %%al,%%ebx\n"
-		" movl %2,%%eax\n"
+		" movl %3,%%eax\n"
 		" int $0x80\n"
 		"2:\n"
 		" .code32\n"
@@ -106,14 +108,15 @@ static void run(const char *file)
 		" movl $1b,%0\n"
 		" movl $(2b - 1b),%1\n"
 		: "=r" (trampoline), "=r" (trampoline_len)
-		: "i" (__NR_exit));
+		: "i" (SYS_STRUCT_ADDR), "i" (__NR_exit));
 
-	offset = (sizeof toybox - trampoline_len - 4) & ~15;
+	offset = (sizeof toybox - trampoline_len) & ~15;
 	entrypoint = toybox + offset;
 	memcpy(entrypoint, trampoline, trampoline_len);
 
-	/* Save the segment base address in the highest dword */
-	*(uint32_t *)(toybox + sizeof toybox - 4) = (uint32_t)toybox;
+	/* Set up the system structure */
+	SYS = (struct system_struct *)(toybox + SYS_STRUCT_ADDR);
+	SYS->seg_base = (unsigned int)toybox;
 
 	load_file(file, offset);
 
