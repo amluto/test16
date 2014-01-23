@@ -53,7 +53,7 @@ static void setup_ldt(void)
 	syscall(SYS_modify_ldt, 1, &data16_desc, sizeof data16_desc);
 }
 
-static void jump16(uint32_t offset, uint32_t start)
+static void __attribute__((noreturn)) jump16(uint32_t offset, uint32_t start)
 {
 	struct far_ptr {
 		uint32_t offset;
@@ -64,6 +64,7 @@ static void jump16(uint32_t offset, uint32_t start)
 	target.segment = 7;
 
 	asm volatile("ljmpl *%0" : : "m" (target), "a" (start));
+	abort();		/* Shouldn't be possible to hit... */
 }
 
 #define ALIGN_UP(x,y) (((x) + (y) - 1) & ((y) - 1))
@@ -259,7 +260,8 @@ static void run(const char *file, char **argv)
 	setup_ldt();
 
 	jump16(offset, start);
-	abort();		/* Does not return */
+	abort();		/* Should never be hit */
+
 barf:
 	fprintf(stderr, "run16: %s: %s\n", file, strerror(errno));
 	exit(127);
