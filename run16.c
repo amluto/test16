@@ -3,6 +3,7 @@
  */
 
 #define _GNU_SOURCE
+#include <unistd.h>
 #include <syscall.h>
 #include <stdio.h>
 #include <sys/syscall.h>
@@ -14,7 +15,7 @@
 #include <asm/unistd.h>
 #include <sys/mman.h>
 
-static char toybox[65536] __attribute__((aligned(4096)));
+static unsigned char toybox[65536] __attribute__((aligned(4096)));
 
 #define LOAD_ADDR	0x1000
 
@@ -52,7 +53,7 @@ static void load_file(const char *file, unsigned int trampoline_addr)
 	FILE *f = fopen(file, "rb");
 
 	if (!f) {
-		fprintf(stderr, "%s: could not open: %s\n", file);
+		fprintf(stderr, "run16: could not open: %s\n", file);
 		exit(127);
 	}
 
@@ -129,8 +130,6 @@ static void run(const char *file)
 
 int main(int argc, char *argv[])
 {
-	int i;
-
 	if (argc != 2) {
 		fprintf(stderr, "Usage: %s filename\n", argv[0]);
 		return 127;
