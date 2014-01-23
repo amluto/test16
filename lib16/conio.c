@@ -1,15 +1,22 @@
 #include <string.h>
 #include <sys16.h>
 
-void puts(const char *s)
+int write(int fd, const void *buf, unsigned int count)
 {
 	int rv;
 
-	/* XXX: should loop over this */
 	asm volatile("int $0x80"
 		     : "=a" (rv)
 		     : "a" (4),	/* __NR_write */
 		       "b" (1),
-		       "c" (_KPTR(s)),
-		       "d" (strlen(s)));
+		       "c" (_KPTR(buf)),
+		       "d" (count));
+
+	return rv;
+}
+
+void puts(const char *s)
+{
+	/* XXX: should loop over this */
+	write(1, s, strlen(s));
 }
