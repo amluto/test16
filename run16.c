@@ -76,13 +76,17 @@ static void jump16(uint32_t offset)
 	asm volatile("ljmpl *%0" : : "m" (target), "a" (LOAD_ADDR));
 }
 
-static void run(const char *file)
+#define ALIGN_UP(x,y) (((x) + (y) - 1) & ((y) - 1))
+
+static void run(const char *file, char **argv)
 {
 	unsigned int trampoline_len;
 	const void *trampoline;
 	unsigned char *entrypoint;
 	uint32_t offset;
 	struct system_struct *SYS;
+	char **argp;
+	uint32_t argptr, argstr;
 
 	setup_ldt();
 
@@ -117,6 +121,28 @@ static void run(const char *file)
 	/* Set up the system structure */
 	SYS = (struct system_struct *)(toybox + SYS_STRUCT_ADDR);
 	SYS->seg_base = (unsigned int)toybox;
+	for (argp = argv; argp; argp++)
+		SYS->argc++;
+
+	argptr = ALIGN_UP(SYS_STRUCT_ADDR + sizeof(struct system_struct), 4);
+	argstr = argptr + (SYS->argc + 1)*sizeof(uint32_t);
+
+	SYS->argv = argptr;
+
+	for (argp = argv; argp; argp++) {
+		int len = strlen(*argp)+1;
+
+		if (argstr + len >= offset) {
+			fprintf(stderr, "run16: %s: command line too long\n",
+				file);
+			exit(127);
+		}
+
+		*(uint32_t *)(toybox + argptr) = argstr;
+		argptr += sizeof(uint32_t);
+		memcpy(toybox + argstr, *argp, len);
+		argstr += len;
+	}
 
 	load_file(file, offset);
 
@@ -133,11 +159,11 @@ static void run(const char *file)
 
 int main(int argc, char *argv[])
 {
-	if (argc != 2) {
-		fprintf(stderr, "Usage: %s filename\n", argv[0]);
+	if (argc < 2) {
+		fprintf(stderr, "Usage: %s filename [args...]\n", argv[0]);
 		return 127;
 	}
 
-	run(argv[1]);
+	run(argv[1], argv+1);
 	return 127;
 }
