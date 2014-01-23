@@ -2,6 +2,6 @@ extern void puts(const char *);
 
 int main(void)
 {
-	puts("Hello, World!\r\n");
+	puts("Hello, World!\n");
 	return 0;
 }
