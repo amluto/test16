@@ -28,9 +28,8 @@ TEST16S   = $(wildcard test16/*.S)
 TEST16C   = $(wildcard test16/*.c)
 TEST16O   = $(TEST16C:.c=.o) $(TEST16S:.S=.o)
 TEST16ELF = $(TEST16O:.o=.elf)
-TEST16BIN = $(TEST16O:.o=.bin)
 
-all : run16 $(TEST16BIN)
+all : run16 $(TEST16ELF)
 
 lib16/%.o: lib16/%.S
 	$(CC) $(S16FLAGS) -c -o $@ $<
@@ -48,12 +47,8 @@ test16/%.o: test16/%.S
 test16/%.o: test16/%.c
 	$(CC) $(C16FLAGS) -c -o $@ $<
 
-.PRECIOUS: test16/%.elf
 test16/%.elf: test16/%.o lib16/lib16.a
 	$(LD) $(LD16FLAGS) -o $@ $^
-
-test16/%.bin: test16/%.elf
-	$(OBJCOPY) -O binary $< $@
 
 run16: run16.c
 	$(CC) $(CFLAGS) -o $@ $<
