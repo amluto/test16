@@ -2,10 +2,22 @@ CC	  = gcc
 LD	  = ld
 AR	  = ar
 OBJCOPY   = objcopy
-CFLAGS	  = -g -m32 -O2
-S16FLAGS  = -g -m32 -mregparm=3 -D__ASSEMBLY__ -I include16
-C16FLAGS  = -g -m32 -mregparm=3 -O2 -ffreestanding \
-	-include code16gcc.h -I include16
+
+GCCWARN   = -Wall -Wstrict-prototypes
+CFLAGS	  = -g -m32 -O2 $(GCCWARN)
+
+# Enable this if a real -m16 switch exists
+#M16       = -m16
+# Otherwise...
+M16       = -m32 -include code16gcc.h -fno-toplevel-reorder \
+	    -fno-unit-at-a-time
+X16FLAGS  = -g $(M16) -D__SYS16__ -I include16
+S16FLAGS  = $(X16FLAGS) -D__ASSEMBLY__
+C16FLAGS  = $(X16FLAGS) $(GCCWARN) -march=i386 -mregparm=3 \
+	    -Os -ffreestanding \
+	    -fno-stack-protector -mpreferred-stack-boundary=2 \
+	    -fno-pic
+
 LD16FLAGS = -m elf_i386 --section-start=.init=0x1000
 
 LIB16S    = $(wildcard lib16/*.S)
