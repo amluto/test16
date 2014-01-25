@@ -31,7 +31,7 @@ static void setup_ldt(void)
 		.base_addr	 = (unsigned long)toybox,
 		.limit		 = 0xffff,
 		.seg_32bit	 = 0,
-		.contents	 = 2, /* Code, R/X */
+		.contents	 = 2, /* Code, not conforming */
 		.read_exec_only	 = 0,
 		.limit_in_pages	 = 0,
 		.seg_not_present = 0,
@@ -42,7 +42,7 @@ static void setup_ldt(void)
 		.base_addr	 = (unsigned long)toybox,
 		.limit		 = 0xffff,
 		.seg_32bit	 = 0,
-		.contents	 = 0, /* Data, R/W */
+		.contents	 = 0, /* Data, grow-up */
 		.read_exec_only	 = 0,
 		.limit_in_pages	 = 0,
 		.seg_not_present = 0,
