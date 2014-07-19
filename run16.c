@@ -129,13 +129,17 @@ static int load_elf(const char *file, uint32_t *start)
 	ph = (const Elf32_Phdr *)(fp + eh->e_phoff);
 
 	for (i = 0; i < eh->e_phnum; i++) {
-		uint32_t addr = ph->p_paddr;
-		uint32_t msize = ph->p_memsz;
-		uint32_t dsize = ph->p_filesz;
+		uint32_t addr;
+		uint32_t msize;
+		uint32_t dsize;
 		int flags, page;
 
 		ph = (const Elf32_Phdr *)((const char *)ph +
 					  i*eh->e_phentsize);
+
+		addr = ph->p_paddr;
+		msize = ph->p_memsz;
+		dsize = ph->p_filesz;
 
 		if (msize && (ph->p_type == PT_LOAD ||
 			      ph->p_type == PT_PHDR)) {
