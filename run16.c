@@ -203,22 +203,23 @@ static void run(const char *file, char **argv)
 		"1:\n"
 		" movw $15,%%cx\n"
 		" movw %%cx,%%ss\n"
-		" movl %2,%%esp\n"
+		" movl %[SYS],%%esp\n"
 		" movw %%cx,%%ds\n"
 		" movw %%cx,%%es\n"
 		" movw %%cx,%%fs\n"
 		" movw %%cx,%%gs\n"
 		" calll *%%eax\n"
 		" movzbl %%al,%%ebx\n"
-		" movl %3,%%eax\n"
+		" movl %[NR_exit],%%eax\n"
 		" int $0x80\n"
 		"2:\n"
 		" .code32\n"
 		" .popsection\n"
-		" movl $1b,%0\n"
-		" movl $(2b - 1b),%1\n"
-		: "=r" (trampoline), "=r" (trampoline_len)
-		: "i" (SYS_STRUCT_ADDR), "i" (__NR_exit));
+		" movl $1b,%[trampoline]\n"
+		" movl $(2b - 1b),%[trampoline_len]\n"
+		: [trampoline] "=r" (trampoline),
+		  [trampoline_len] "=r" (trampoline_len)
+		: [SYS] "i" (SYS_STRUCT_ADDR), [NR_exit] "i" (__NR_exit));
 
 	offset = (sizeof toybox - trampoline_len) & ~15;
 	entrypoint = toybox + offset;
