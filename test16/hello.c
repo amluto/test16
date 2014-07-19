@@ -2,6 +2,7 @@ extern void puts(const char *);
 
 static const char *hexstr(unsigned int v)
 {
+	int i;
 	const char hexdigits[] = "0123456789abcdef";
 	static char hexbuf[9];
 	char *p = hexbuf;
