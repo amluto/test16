@@ -49,8 +49,12 @@ static void setup_ldt(void)
 		.useable	 = 0
 	};
 
-	syscall(SYS_modify_ldt, 1, &code16_desc, sizeof code16_desc);
-	syscall(SYS_modify_ldt, 1, &data16_desc, sizeof data16_desc);
+	if (syscall(SYS_modify_ldt, 1, &code16_desc, sizeof code16_desc) != 0 ||
+	    syscall(SYS_modify_ldt, 1, &data16_desc, sizeof data16_desc) != 0) {
+		fprintf(stderr, "run16: modify_ldt failed: %s\n",
+			strerror(errno));
+		exit(1);
+	}
 }
 
 static void __attribute__((noreturn)) jump16(uint32_t offset, uint32_t start)
