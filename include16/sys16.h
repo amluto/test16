@@ -22,4 +22,6 @@ struct system_struct {
 # define _KPTR(x) ((unsigned int)(x) + SYS->seg_base)
 #endif
 
+extern unsigned long last_iret_esp;
+
 #endif /* SYS16_H */

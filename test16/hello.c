@@ -1,3 +1,5 @@
+#include <sys16.h>
+
 extern void puts(const char *);
 
 static const char *hexstr(unsigned int v)
@@ -19,14 +21,25 @@ static const char *hexstr(unsigned int v)
 static inline unsigned int esp(void)
 {
 	unsigned int v;
-	asm volatile("movl %%esp,%0 ; movzwl %%sp,%%esp" : "=rm" (v));
+	asm volatile("movl %%esp,%0" : "=rm" (v));
 	return v;
 }
 
 int main(void)
 {
-	puts("Hello, World, esp = %\n");
-	asm("movl (%%esp),%%eax" : : : "eax");
+	unsigned int initial_esp = esp();
+	unsigned int eax;
+
+	puts("Hello, World, esp = 0x");
+	puts(hexstr(initial_esp));
+	puts("\n");
+	puts("esp after last IRET = 0x");
+	puts(hexstr(last_iret_esp));
+	puts("\n");
+
+	/* Try to provoke a crash. */
+	eax = -1;
+	asm volatile("int $0x80; movl (%%esp),%%eax" : "+a" (eax));
 	puts("Hello, Afterworld!\n");
 	return 0;
 }
